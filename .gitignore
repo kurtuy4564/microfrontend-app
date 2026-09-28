@@ -1,0 +1,26 @@
+# Зависимости
+node_modules/
+*/node_modules/
+
+# Сборка
+dist/
+*/dist/
+
+# Логи
+*.log
+npm-debug.log*
+
+# Vite
+.vite/
+*/.vite/
+
+# Окружение
+.env
+.env.local
+*.local
+
+# Редакторы
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
