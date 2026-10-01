@@ -1,7 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js'
 import { Doughnut } from 'react-chartjs-2'
-import { loadTransactions, saveTransactions, type FinanceTransaction, type TransactionType } from '../utils/financeStorage'
+import FinanceTransactionList from './FinanceTransactionList'
+import {
+  loadTransactions,
+  saveTransactions,
+  type FinanceTransaction,
+  type TransactionType,
+} from '../utils/financeStorage'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -30,22 +36,24 @@ export default function FinancePanel() {
     .reduce((total, transaction) => total + transaction.amount, 0)
   const balance = incomeTotal - expenseTotal
 
-  const expenseGroups = transactions
-    .filter(transaction => transaction.type === 'expense')
+  const Groups = transactions
+    .filter(transaction => transaction.type === type)
     .reduce<Record<string, number>>((groups, transaction) => {
       groups[transaction.category] = (groups[transaction.category] ?? 0) + transaction.amount
       return groups
     }, {})
-  const expenseCategories = Object.keys(expenseGroups)
-  
-  const chartData = {
-    labels: expenseCategories,
-    datasets: [{
-      data: expenseCategories.map(expenseCategory => expenseGroups[expenseCategory]),
-      backgroundColor: expenseCategories.map((_, index) => chartColors[index % chartColors.length]),
-      borderWidth: 0,
-      hoverOffset: 5,
-    }],
+  const Categories = Object.keys(Groups)
+
+  let chartData = {
+    labels: Categories,
+    datasets: [
+      {
+        data: Categories.map(Category => Groups[Category]),
+        backgroundColor: Categories.map((_, index) => chartColors[index % chartColors.length]),
+        borderWidth: 0,
+        hoverOffset: 5,
+      },
+    ],
   }
 
   function handleTypeChange(nextType: TransactionType) {
@@ -80,7 +88,6 @@ export default function FinancePanel() {
     <section className='finance-panel'>
       <header className='finance-header'>
         <div>
-          <p className='finance-eyebrow'>ЛИЧНЫЙ БЮДЖЕТ</p>
           <h2>Финансы</h2>
         </div>
         <p className='finance-balance-label'>Текущий баланс</p>
@@ -126,7 +133,11 @@ export default function FinancePanel() {
           <label>
             Категория
             <select value={category} onChange={event => setCategory(event.target.value)}>
-              {categories[type].map(item => <option key={item} value={item}>{item}</option>)}
+              {categories[type].map(item => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
             </select>
           </label>
           <label>
@@ -141,12 +152,14 @@ export default function FinancePanel() {
               placeholder='0,00'
             />
           </label>
-          <button className='finance-submit' type='submit'>Добавить операцию</button>
+          <button className='finance-submit' type='submit'>
+            Добавить операцию
+          </button>
         </form>
 
         <section className='finance-chart-section' aria-label='Расходы по категориям'>
-          <h3>Расходы по категориям</h3>
-          {expenseCategories.length > 0 ? (
+          <h3>{type === 'expense' ? 'Расходы' : 'Доходы'} по категориям</h3>
+          {Categories.length > 0 ? (
             <div className='finance-chart'>
               <Doughnut
                 data={chartData}
@@ -164,36 +177,14 @@ export default function FinancePanel() {
               />
             </div>
           ) : (
-            <p className='finance-empty-chart'>Добавьте расход, чтобы увидеть диаграмму.</p>
+            <p className='finance-empty-chart'>
+              Добавьте {type === 'expense' ? 'Расходы' : 'Доходы'}, чтобы увидеть диаграмму.
+            </p>
           )}
         </section>
       </div>
 
-      <section className='finance-transactions'>
-        <h3>Последние операции</h3>
-        {transactions.length === 0 ? (
-          <p className='finance-empty-list'>Операций пока нет.</p>
-        ) : (
-          <ul>
-            {transactions.map(transaction => (
-              <li key={transaction.id}>
-                <span className={`transaction-marker transaction-marker--${transaction.type}`} />
-                <span className='transaction-category'>{transaction.category}</span>
-                <span className={`transaction-amount transaction-amount--${transaction.type}`}>
-                  {transaction.type === 'income' ? '+' : '−'}{currency.format(transaction.amount)}
-                </span>
-                <button
-                  className='transaction-delete'
-                  type='button'
-                  aria-label={`Удалить операцию: ${transaction.category}`}
-                  onClick={() => deleteTransaction(transaction.id)}>
-                  Удалить
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <FinanceTransactionList transactions={transactions} onDelete={deleteTransaction} />
     </section>
   )
 }
