@@ -1,36 +1,25 @@
-import type { Task, TaskStatus } from '../type'
+import TaskCard from './TaskCard'
+import { useTaskContext } from '../context/TaskContext'
+import type { TaskStatus } from '../type'
 
-const priorityLabels = {
-  high: 'Высокий',
-  medium: 'Средний',
-  low: 'Низкий',
-}
-
-export default function TaskList({
-  tasks,
-  title,
-  status,
-}: {
-  tasks: Task[]
+type TaskListProps = {
   title: string
   status: TaskStatus
-}) {
+}
+
+export default function TaskList({ title, status }: TaskListProps) {
+  const { tasks } = useTaskContext()
+  const columnTasks = tasks.filter(task => task.status === status)
+
   return (
     <section className={`task-column task-column--${status}`} aria-label={title}>
       <div className='column-heading'>
         <h2>{title}</h2>
-        <span className='task-count'>{tasks.length}</span>
+        <span className='task-count'>{columnTasks.length}</span>
       </div>
       <div className='task-list'>
-        {tasks.map(task => (
-          <article className='task-card' key={task.id}>
-            <div className={`task-priority task-priority--${task.priority}`}>
-              <span className='priority-dot' />
-              {priorityLabels[task.priority]} приоритет
-            </div>
-            <h3>{task.title}</h3>
-            <p>{task.description}</p>
-          </article>
+        {columnTasks.map(task => (
+          <TaskCard key={task.id} task={task} />
         ))}
       </div>
     </section>
