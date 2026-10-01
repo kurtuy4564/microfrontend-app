@@ -1,3 +1,3 @@
 export default function FinancePanel() {
-  return <div>Это Finance Control</div>
+  return <section className='finance-panel'>Это Finance Control</section>
 }
